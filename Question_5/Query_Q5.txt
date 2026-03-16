@@ -1,0 +1,34 @@
+Query_Q5_1_authority_counts :
+
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?type (COUNT(*) AS ?count)
+WHERE {
+  { ?record a foaf:Person . BIND("Person" AS ?type) }
+  UNION
+  { ?record a foaf:Organization . BIND("Organization" AS ?type) }
+  UNION
+  { ?record a foaf:geo . BIND("Geographic" AS ?type) }
+  UNION
+  { ?record a skos:Concept . BIND("Topic/Concept" AS ?type) }
+}
+GROUP BY ?type
+ORDER BY DESC(?count)
+
+
+Query_Q5_2_authority_linkage :
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX marcrel: <http://id.loc.gov/vocabulary/relators/>
+
+SELECT 
+  (COUNT(DISTINCT ?doc) AS ?total_bibliographic_records)
+  (COUNT(DISTINCT ?linked) AS ?records_linked_to_creator_authority)
+WHERE {
+  ?doc dcterms:title ?title .
+  OPTIONAL { ?doc marcrel:aut ?linked }
+}
+
+
+
