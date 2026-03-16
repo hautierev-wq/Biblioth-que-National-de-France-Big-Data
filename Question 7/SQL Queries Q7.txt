@@ -1,0 +1,57 @@
+SQL Queries:
+
+Q7_1:
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX marcrel: <http://id.loc.gov/vocabulary/relators/>
+PREFIX rdarelationships: <http://rdvocab.info/RDARelationshipsWEMI/>
+
+SELECT
+  (COUNT(DISTINCT ?doc) AS ?total)
+  (COUNT(DISTINCT ?docWithDate)    AS ?hasDate)
+  (COUNT(DISTINCT ?docWithLang)    AS ?hasLang)
+  (COUNT(DISTINCT ?docWithSubject) AS ?hasSubject)
+  (COUNT(DISTINCT ?docWithAuthor)  AS ?hasAuthor)
+WHERE {
+  ?doc dcterms:title ?title .
+  OPTIONAL { ?docWithDate    dcterms:title ?t1 ; dcterms:date     ?date    . FILTER(?docWithDate    = ?doc) }
+  OPTIONAL { ?docWithLang    dcterms:title ?t2 ; dcterms:language ?lang    . FILTER(?docWithLang    = ?doc) }
+  OPTIONAL { ?docWithSubject dcterms:title ?t3 ; dcterms:subject  ?subject . FILTER(?docWithSubject = ?doc) }
+  OPTIONAL { ?docWithAuthor  dcterms:title ?t4 ; marcrel:aut      ?author  . FILTER(?docWithAuthor  = ?doc) }
+}
+
+Q7_2:
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?title ?date (COUNT(DISTINCT ?doc) AS ?copies)
+WHERE {
+  ?doc dcterms:title ?title .
+  OPTIONAL { ?doc dcterms:date ?date }
+}
+GROUP BY ?title ?date
+HAVING (COUNT(DISTINCT ?doc) > 1)
+ORDER BY DESC(COUNT(DISTINCT ?doc))
+LIMIT 200
+
+Q7_3:
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX marcrel: <http://id.loc.gov/vocabulary/relators/>
+
+SELECT ?score (COUNT(DISTINCT ?doc) AS ?recordCount)
+WHERE {
+  ?doc dcterms:title ?title .
+  OPTIONAL { ?doc dcterms:date     ?date    }
+  OPTIONAL { ?doc dcterms:language ?lang    }
+  OPTIONAL { ?doc dcterms:subject  ?subject }
+  OPTIONAL { ?doc marcrel:aut      ?author  }
+  BIND(
+    (IF(BOUND(?date),    1, 0) +
+     IF(BOUND(?lang),    1, 0) +
+     IF(BOUND(?subject), 1, 0) +
+     IF(BOUND(?author),  1, 0)) AS ?score
+  )
+}
+GROUP BY ?score
+ORDER BY ?score

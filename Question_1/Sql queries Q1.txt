@@ -1,0 +1,45 @@
+SQL Queries for Q1:
+
+Q1_1: 
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?type (COUNT(DISTINCT ?doc) AS ?count)
+WHERE {
+  ?doc dcterms:type ?type .
+  FILTER(STRSTARTS(STR(?type), "http://purl.org/dc/dcmitype/"))
+}
+GROUP BY ?type
+ORDER BY DESC(?count)
+LIMIT 20
+
+Q1_2:
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdarelationships: <http://rdvocab.info/RDARelationshipsWEMI/>
+PREFIX bnf-onto: <http://data.bnf.fr/ontology/bnf-onto/>
+
+SELECT ?century (COUNT(DISTINCT ?doc) AS ?count)
+WHERE {
+  ?doc dcterms:date ?date .
+  FILTER(REGEX(?date, "^[0-9]{4}"))
+  BIND(CONCAT(SUBSTR(?date,1,2), "xx") AS ?century)
+}
+GROUP BY ?century
+ORDER BY ?century
+LIMIT 50
+
+Q1_3:
+
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?authorLabel (COUNT(DISTINCT ?work) AS ?workCount)
+WHERE {
+  ?work dcterms:creator ?author .
+  OPTIONAL { ?author foaf:name ?authorLabel }
+  OPTIONAL { ?author rdfs:label ?authorLabel }
+}
+GROUP BY ?author ?authorLabel
+ORDER BY DESC(?workCount)

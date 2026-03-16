@@ -1,0 +1,82 @@
+SQL Queries
+
+Q2_1:
+
+PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?langCode (COUNT(?doc) AS ?count)
+WHERE {
+  {
+    SELECT ?doc ?lang WHERE {
+      ?doc dcterms:language ?lang .
+    }
+    LIMIT 500000
+  }
+
+  OPTIONAL { ?lang skos:prefLabel ?label }
+  BIND(
+    COALESCE(
+      ?label,
+      REPLACE(STR(?lang), "^.*/", "")
+    ) AS ?langCode
+  )
+}
+GROUP BY ?lang ?langCode
+ORDER BY DESC(?count)
+LIMIT 20
+
+Q2_2:
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?lang ?decade (COUNT(?doc) AS ?nb)
+WHERE {
+  ?doc dcterms:language ?lang ;
+       dcterms:date ?date .
+  FILTER(REGEX(?date, "^[0-9]{4}$"))
+  BIND(xsd:integer(FLOOR(xsd:integer(?date) / 10) * 10) AS ?decade)
+  FILTER(?decade >= 1800 && ?decade <= 2020)
+  FILTER(?lang IN (
+    <http://id.loc.gov/vocabulary/iso639-2/fre>,
+    <http://id.loc.gov/vocabulary/iso639-2/eng>,
+    <http://id.loc.gov/vocabulary/iso639-2/ger>,
+    <http://id.loc.gov/vocabulary/iso639-2/spa>,
+    <http://id.loc.gov/vocabulary/iso639-2/ita>
+  ))
+}
+GROUP BY ?lang ?decade
+ORDER BY ?decade ?lang
+LIMIT 5000
+
+Q2_3:
+
+PREFIX rdvocab: <http://rdvocab.info/Elements/>
+PREFIX rdarelationships: <http://rdvocab.info/RDARelationshipsWEMI/>
+
+SELECT ?place (COUNT(?manifestation) AS ?nb)
+WHERE {
+  ?manifestation rdarelationships:expressionManifested ?expression ;
+                 rdvocab:placeOfPublication ?place .
+  FILTER(!REGEX(?place, "^[Pp]aris", "i"))
+}
+GROUP BY ?place
+ORDER BY DESC(?nb)
+LIMIT 30
+
+Q2_4:
+
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?decade
+  (SUM(IF(?lang = <http://id.loc.gov/vocabulary/iso639-2/fre>, 1, 0)) AS ?french)
+  (COUNT(?doc) AS ?total)
+WHERE {
+  ?doc dcterms:language ?lang ;
+       dcterms:date ?date .
+  FILTER(REGEX(?date, "^[0-9]{4}$"))
+  BIND(xsd:integer(FLOOR(xsd:integer(?date) / 10) * 10) AS ?decade)
+  FILTER(?decade >= 1800 && ?decade <= 2020)
+}
+GROUP BY ?decade
