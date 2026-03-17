@@ -1,0 +1,49 @@
+Query_Q3_Q4_1_top_rameau_subjects :
+
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?subjectLabel (COUNT(DISTINCT ?work) AS ?workCount)
+WHERE {
+  ?work dcterms:subject ?subject .
+  ?subject skos:prefLabel ?subjectLabel .
+  FILTER(LANG(?subjectLabel) = "fr")
+}
+GROUP BY ?subjectLabel
+ORDER BY DESC(?workCount)
+LIMIT 60
+
+Query_Q3_Q4_2_subject_by_century :
+
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?subjectLabel ?date (COUNT(*) AS ?count)
+WHERE {
+  ?work dcterms:subject ?subject ;
+        dcterms:date ?date .
+  ?subject skos:prefLabel ?subjectLabel .
+  FILTER(LANG(?subjectLabel) = "fr")
+  FILTER(?date >= "1700" && ?date < "2100")
+}
+GROUP BY ?subjectLabel ?date
+ORDER BY DESC(?count)
+LIMIT 200
+
+
+Query_Q3_Q4_3_language_subject_crossanalysis :
+
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?language ?subjectLabel (COUNT(*) AS ?count)
+WHERE {
+  ?work dcterms:subject ?subject ;
+        dcterms:language ?language .
+  ?subject skos:prefLabel ?subjectLabel .
+  FILTER(LANG(?subjectLabel) = "fr")
+}
+GROUP BY ?language ?subjectLabel
+ORDER BY DESC(?count)
+LIMIT 150
+
